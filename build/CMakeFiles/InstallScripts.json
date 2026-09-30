@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/antan/Studies/LatencyAwareRL/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

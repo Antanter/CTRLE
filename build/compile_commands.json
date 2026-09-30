@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/antan/Studies/LatencyAwareRL/build",
+  "command": "/usr/bin/c++ -Drobot_env_EXPORTS -I/home/antan/Studies/LatencyAwareRL/include -isystem /usr/include/python3.14 -isystem /home/antan/Studies/LatencyAwareRL/.venv/lib/python3.14/site-packages/pybind11/include -isystem /usr/include/eigen3 -O3 -DNDEBUG -std=gnu++23 -fPIC -fvisibility=hidden -march=native -flto=auto -fno-fat-lto-objects -fopenmp -o CMakeFiles/robot_env.dir/python/envs/robot_env/robot_bindings.cpp.o -c /home/antan/Studies/LatencyAwareRL/python/envs/robot_env/robot_bindings.cpp",
+  "file": "/home/antan/Studies/LatencyAwareRL/python/envs/robot_env/robot_bindings.cpp",
+  "output": "CMakeFiles/robot_env.dir/python/envs/robot_env/robot_bindings.cpp.o"
+},
+{
+  "directory": "/home/antan/Studies/LatencyAwareRL/build",
+  "command": "/usr/bin/c++ -Dracing_env_EXPORTS -I/home/antan/Studies/LatencyAwareRL/include -isystem /usr/include/python3.14 -isystem /home/antan/Studies/LatencyAwareRL/.venv/lib/python3.14/site-packages/pybind11/include -isystem /usr/include/eigen3 -O3 -DNDEBUG -std=gnu++23 -fPIC -fvisibility=hidden -march=native -flto=auto -fno-fat-lto-objects -fopenmp -o CMakeFiles/racing_env.dir/python/envs/racing_env/racing_bindings.cpp.o -c /home/antan/Studies/LatencyAwareRL/python/envs/racing_env/racing_bindings.cpp",
+  "file": "/home/antan/Studies/LatencyAwareRL/python/envs/racing_env/racing_bindings.cpp",
+  "output": "CMakeFiles/racing_env.dir/python/envs/racing_env/racing_bindings.cpp.o"
+}
+]
