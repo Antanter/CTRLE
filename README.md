@@ -1,20 +1,10 @@
-# LatencyAwareRL (CTRLE)
+# CTRLE (Continuous Time RL Engine)
 
-A research framework for **latency-aware reinforcement learning** built on semi-Markov decision processes (sMDPs).
+A research framework for reinforcement learning built on semi-Markov decision processes.
 
-Instead of the classic fixed-timestep RL loop, environments here are **discrete-event simulations**: the agent does not act every fixed `dt`. Instead, each action includes a **commitment horizon** — how long the current control should be held before the next decision — while the world evolves continuously in between (with random disturbances, control expiries, timeouts, etc. firing as events). Every `step()` therefore returns `tau`, the continuous time actually elapsed since the last decision, and the learning side discounts accordingly with `gamma ** tau` (sMDP-style PPO/GAE).
+Instead of the classic fixed-timestep RL loop, environments here are discrete-event simulations: the agent does not act every fixed `dt`. Instead, each action includes a commitment horizon - how long the current control should be held before the next decision - while the world evolves continuously in between (with random disturbances, control expiries, timeouts, etc. firing as events). Every `step()` therefore returns `tau`, the time which actually elapsed since the last decision, and the learning side discounts accordingly with `gamma ** tau` (GAE).
 
 The environments themselves are written in fast, header-only **C++23** (OpenMP-parallelized, exposed to Python via **pybind11**), while training, visualization, and the lab GUI are pure **Python** (PyTorch + PyQt/pyqtgraph).
-
-## Highlights
-
-- **sMDP / discrete-event core** — priority-queue event simulation (`Decision`, `ControlExpiry`, `Disturbance`, `Timeout`, ...), a simulation `Clock`, and a `StepResult` carrying the elapsed time `tau`
-- **Latency as part of the policy** — the agent outputs a control *and* a commitment horizon (mapped through `tanh` into `[h_min, h_max]`), so it learns *when* to think, not just *what* to do
-- **C++20 concepts-checked environments** — `Environment` and `MultiAgentEnvironment` concepts enforce a uniform `reset / step / observe` interface (validated via `static_assert`)
-- **Vectorized, OpenMP-parallel envs** — a single `VecEnv` steps thousands of environments with the GIL released
-- **PPO with sMDP discounting** — GAE using `gamma^tau` per step, supporting both single- and multi-agent (per-agent rollout splitting)
-- **Built-in lab GUI** — Qt application with a *Train* tab (launch training, live return/entropy plots, log console) and a *Replay* tab (load checkpoints and watch episodes rendered at adjustable speed)
-- **Pluggable env registry** — new environments are discovered automatically via `envs/*/_register.py` files
 
 ## Environments
 
@@ -23,15 +13,15 @@ Single-agent point-mass navigation in a 5×5 world:
 
 - reach the goal while avoiding randomly placed obstacles and staying inside the walls
 - physics: thrust/drag integration with fixed micro-steps between events
-- stochastic **disturbances** (exponentially distributed inter-arrival) kick the robot between decisions
-- action = 2D thrust + 1 commitment horizon (held in `[0.2, 2.0]` s); terminates on goal / crash / wall, truncates on the 30 s time budget
+- stochastic disturbances (exponentially distributed inter-arrival) kick the robot between decisions
+- action = thrust (x) X thrust (y) X commitment horizon (held in `[0.2, 2.0]` s); terminates on goal / crash / wall, truncates on the 30`s time budget
 
 ### CarRacing (`racing_env`)
 Two-agent multi-agent racing on a straight track with randomly spawned rocks:
 
 - progress-based reward, crash on rocks or track boundaries, car–car bumping with momentum exchange
 - asynchronous decisions: each car has its own decision events, so `current_agents()` tells you *which* agent acts in each parallel env at each step
-- action = longitudinal/lateral thrust + commitment horizon (held in `[0.15, 1.2]` s)
+- action = longitudinal thrust X lateral thrust X commitment horizon (held in `[0.15, 1.2]` s)
 
 ## Repository layout
 
@@ -55,8 +45,8 @@ CTRLE/
 
 - C++23 compiler (GCC 13+ / Clang 17+)
 - CMake ≥ 3.16
-- [pybind11](https://github.com/pybind/pybind11), Eigen3, OpenMP
-- Python ≥ 3.9 with `numpy`, `torch`, `pyqtgraph` (Qt bindings)
+- pybind11, Eigen3, OpenMP
+- Python ≥ 3.9 with `numpy`, `torch`, `pyqtgraph`
 
 ## Building
 
@@ -79,7 +69,7 @@ python run.py
 ```
 
 - **Train tab**: pick a model + environment, set the number of parallel envs, updates, rollout length, seed, learning rate and entropy coefficient, then *Start training* — the training process runs in the background while mean return and entropy are plotted live.
-- **Replay tab**: choose an environment, load checkpoint file(s) (for multi-agent envs, checkpoints named `..._0.pt`, `..._1.pt` are picked up together), and watch episodes at an adjustable playback speed.
+- **Replay tab**: choose an environment, load checkpoint file(s) (for multi-agent envs, checkpoints are named `..._0.pt`, `..._1.pt`), and watch episodes at an adjustable playback speed.
 
 ### CLI training
 
@@ -97,7 +87,7 @@ Common flags: `--envs` (parallel environments), `--episodes` (updates), `--steps
 
 ## Adding a new environment
 
-1. Implement the env in `include/` satisfying the `Environment` (or `MultiAgentEnvironment`) concept and expose it through a pybind11 module in `CMakeLists.txt`.
+1. Implement the env in `include/` satisfying the `Environment` or `MultiAgentEnvironment` concept and expose it through a pybind11 module in `CMakeLists.txt`.
 2. In `python/envs/<your_env>/`, add the bindings import, a `main.py` training script, a replay renderer (subclass of `BaseRenderer`), and a `_register.py` calling `register(EnvSpec(...))`.
 3. The GUI and registry pick it up automatically — no other wiring needed.
 
