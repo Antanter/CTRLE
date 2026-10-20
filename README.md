@@ -50,6 +50,8 @@ CTRLE/
 
 ## Building
 
+First, install ```pybind11``` and ```eigen``` in your OS package manager.
+
 ```bash
 cmake -B build
 cmake --build build -j
