@@ -1,15 +1,15 @@
 # CTRLE (Continuous Time RL Engine)
 
-A research framework for reinforcement learning built on semi-Markov decision processes.
+RL framework built on theory of sMDP.
 
-Instead of the classic fixed-timestep RL loop, environments here are discrete-event simulations: the agent does not act every fixed `dt`. Instead, each action includes a commitment horizon - how long the current control should be held before the next decision - while the world evolves continuously in between (with random disturbances, control expiries, timeouts, etc. firing as events). Every `step()` therefore returns `tau`, the time which actually elapsed since the last decision, and the learning side discounts accordingly with `gamma ** tau`.
+The environment is time-continuous, in means of implementation: instead of fixed step, there's a queue of events, and the runner goes through records, integrating relevant variables along the passed time. In PPO, discount is computed as `gamma ** tau`.
 
-The environments themselves are written in fast, header-only **C++23** (OpenMP-parallelized, exposed to Python via **pybind11**), while training, visualization, and the lab GUI are pure **Python** (PyTorch + PyQt/pyqtgraph).
+The environments themselves are written in fast, header-only OpenMP-parallelized **C++23**, exposed to Python via pybind11. Training, visualization, and the GUI are pure **Python**.
 
 ## Environments
 
 ### RobotNav (`robot_env`)
-Single-agent point-mass navigation in a 5×5 world:
+Single-agent physical navigation in a square L^2 world:
 
 - reach the goal while avoiding randomly placed obstacles and staying inside the walls
 - physics: thrust/drag integration with fixed micro-steps between events
@@ -17,7 +17,7 @@ Single-agent point-mass navigation in a 5×5 world:
 - action = thrust (x) x thrust (y) x commitment horizon (held in `[0.2, 2.0]` s); terminates on goal / crash / wall, truncates on the 30`s time budget
 
 ### CarRacing (`racing_env`)
-Two-agent multi-agent racing on a straight track with randomly spawned rocks:
+Two-agent racing on a straight track with randomly spawned rocks:
 
 - progress-based reward, crash on rocks or track boundaries, car–car bumping with momentum exchange
 - asynchronous decisions: each car has its own decision events, so `current_agents()` tells you *which* agent acts in each parallel env at each step
@@ -28,7 +28,7 @@ Two-agent multi-agent racing on a straight track with randomly spawned rocks:
 - C++23 compiler (GCC 13+ / Clang 17+)
 - CMake ≥ 3.16
 - pybind11, Eigen3, OpenMP
-- Python ≥ 3.9 with `numpy`, `torch`, `pyqtgraph`
+- Python ≥ 3.9
 
 ## Building
 
@@ -92,11 +92,11 @@ Common flags: `--envs` (parallel environments), `--episodes` (updates), `--steps
 
 1. Implement the env in `include/` satisfying the `Environment` or `MultiAgentEnvironment` concept and expose it through a pybind11 module in `CMakeLists.txt`.
 2. In `python/envs/<your_env>/`, add the bindings import, a `main.py` training script, a replay renderer (subclass of `BaseRenderer`), and a `_register.py` calling `register(EnvSpec(...))`.
-3. The GUI and registry pick it up automatically — no other wiring needed.
+3. The registry picks it up automatically.
 
 ## Notes
 
-- The environment core is **stateless**: all mutable simulation state lives in a `State` struct owned by the caller, which is what makes cheap OpenMP-parallel vectorization possible.
-- Randomness is a fast per-state splitmix64-style RNG stream, seeded per parallel env (`seed + i`), so runs are reproducible.
+- The environment core is stateless: all mutable simulation state lives in a `State` struct owned by the caller, which is what makes cheap OpenMP-parallel vectorization possible.
+- Randomness is a fast per-state splitmix64-style RNG stream, seeded per parallel env (`seed + _env_idx`), so runs are reproducible.
 - `python/envs/*/*.pyi` stub files are provided for type checking of the compiled modules.
 
