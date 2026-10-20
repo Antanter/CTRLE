@@ -23,24 +23,6 @@ Two-agent multi-agent racing on a straight track with randomly spawned rocks:
 - asynchronous decisions: each car has its own decision events, so `current_agents()` tells you *which* agent acts in each parallel env at each step
 - action = longitudinal thrust x lateral thrust x commitment horizon (held in `[0.15, 1.2]` s)
 
-## Repository layout
-
-```
-CTRLE/
-├── CMakeLists.txt              # pybind11 module build (robot_env, racing_env)
-├── include/
-│   ├── core/                   # Clock, Event queue + concepts, Environment concepts, Runner (VecEnv)
-│   ├── robot_env/              # RobotNavEnv + OpenMP parallel env
-│   └── car_env/                # CarRacingEnv + OpenMP parallel env
-└── python/
-    ├── run.py                  # entry point for the lab GUI
-    ├── agents/ppo.py           # PPO agent (sMDP-aware GAE on the training side)
-    ├── envs/
-    │   ├── robot_env/          # bindings, training CLI, replay renderer, registry hook
-    │   └── racing_env/         # bindings, training CLI, replay renderer, registry hook
-    └── interface/              # Qt application, train/replay tabs, env registry
-```
-
 ## Requirements
 
 - C++23 compiler (GCC 13+ / Clang 17+)
@@ -50,14 +32,33 @@ CTRLE/
 
 ## Building
 
-First, install ```pybind11``` and ```eigen``` in your OS package manager.
+First, install `cmake`, a C++ compiler, `pybind11` and `eigen` with your OS package manager.
 
 ```bash
-cmake -B build
+# Arch
+sudo pacman -S cmake pybind11 eigen
+# Debian/Ubuntu
+sudo apt install cmake pybind11-dev libeigen3-dev
+# Fedora
+sudo dnf install cmake pybind11-devel eigen3-devel
+```
+
+Then create a virtual environment and install the Python dependencies from `pyproject.toml`:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+Finally, build the C++ modules (with the venv still active):
+
+```bash
+cmake -B build -DPython_EXECUTABLE=$(which python)
 cmake --build build -j
 ```
 
-This compiles the `robot_env` and `racing_env` pybind11 modules and places the `.so`/`.pyd` files directly into `python/`, where the training scripts and GUI import them from. Note that the modules are compiled with `-march=native`, so build on the machine you plan to run on.
+This compiles the `robot_env` and `racing_env` pybind11 modules and places the `.so`/`.pyd` files directly into `python/`, where the training scripts and GUI import them from. Note that the modules are compiled with `-march=native`, so build on the machine you plan to run on. If you change the Python version or recreate the venv, delete `build/` and rebuild.
 
 ## Usage
 
