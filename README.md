@@ -2,7 +2,7 @@
 
 A research framework for reinforcement learning built on semi-Markov decision processes.
 
-Instead of the classic fixed-timestep RL loop, environments here are discrete-event simulations: the agent does not act every fixed `dt`. Instead, each action includes a commitment horizon - how long the current control should be held before the next decision - while the world evolves continuously in between (with random disturbances, control expiries, timeouts, etc. firing as events). Every `step()` therefore returns `tau`, the time which actually elapsed since the last decision, and the learning side discounts accordingly with `gamma ** tau` (GAE).
+Instead of the classic fixed-timestep RL loop, environments here are discrete-event simulations: the agent does not act every fixed `dt`. Instead, each action includes a commitment horizon - how long the current control should be held before the next decision - while the world evolves continuously in between (with random disturbances, control expiries, timeouts, etc. firing as events). Every `step()` therefore returns `tau`, the time which actually elapsed since the last decision, and the learning side discounts accordingly with `gamma ** tau`.
 
 The environments themselves are written in fast, header-only **C++23** (OpenMP-parallelized, exposed to Python via **pybind11**), while training, visualization, and the lab GUI are pure **Python** (PyTorch + PyQt/pyqtgraph).
 
@@ -14,14 +14,14 @@ Single-agent point-mass navigation in a 5×5 world:
 - reach the goal while avoiding randomly placed obstacles and staying inside the walls
 - physics: thrust/drag integration with fixed micro-steps between events
 - stochastic disturbances (exponentially distributed inter-arrival) kick the robot between decisions
-- action = thrust (x) X thrust (y) X commitment horizon (held in `[0.2, 2.0]` s); terminates on goal / crash / wall, truncates on the 30`s time budget
+- action = thrust (x) x thrust (y) x commitment horizon (held in `[0.2, 2.0]` s); terminates on goal / crash / wall, truncates on the 30`s time budget
 
 ### CarRacing (`racing_env`)
 Two-agent multi-agent racing on a straight track with randomly spawned rocks:
 
 - progress-based reward, crash on rocks or track boundaries, car–car bumping with momentum exchange
 - asynchronous decisions: each car has its own decision events, so `current_agents()` tells you *which* agent acts in each parallel env at each step
-- action = longitudinal thrust X lateral thrust X commitment horizon (held in `[0.15, 1.2]` s)
+- action = longitudinal thrust x lateral thrust x commitment horizon (held in `[0.15, 1.2]` s)
 
 ## Repository layout
 
